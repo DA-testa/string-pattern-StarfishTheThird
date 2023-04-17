@@ -1,32 +1,55 @@
-# python3
+class RollingHash:
+    def __init__(self, text, sizeWord):
+        self.text = text
+        self.hash = 0 
+        self.sizeWord = sizeWord
 
-def read_input():
-    # this function needs to aquire input both from keyboard and file
-    # as before, use capital i (input from keyboard) and capital f (input from file) to choose which input type will follow
-    
-    
-    # after input type choice
-    # read two lines 
-    # first line is pattern 
-    # second line is text in which to look for pattern 
-    
-    # return both lines in one return
-    
-    # this is the sample return, notice the rstrip function
-    return (input().rstrip(), input().rstrip())
+        for i in range(0, sizeWord):
+            self.hash += (ord(self.text[i]) - ord("a")+1)*(26**(sizeWord - i -1))
 
-def print_occurrences(output):
-    # this function should control output, it doesn't need any return
-    print(' '.join(map(str, output)))
+        self.window_start = 0
+        self.window_end = sizeWord
 
-def get_occurrences(pattern, text):
-    # this function should find the occurances using Rabin Karp alghoritm 
+    def move_window(self):
+        if self.window_end <= len(self.text) - 1:
+            self.hash -= (ord(self.text[self.window_start]) - ord("a")+1)*26**(self.sizeWord-1)
+            self.hash *= 26
+            self.hash += ord(self.text[self.window_end])- ord("a")+1
+            self.window_start += 1
+            self.window_end += 1
 
-    # and return an iterable variable
-    return [0]
+    def window_text(self):
+        return self.text[self.window_start:self.window_end]
 
+def rabin_karp(word, text):
+    if word == "" or text == "":
+        return []
 
-# this part launches the functions
-if __name__ == '__main__':
-    print_occurrences(get_occurrences(*read_input()))
+    matches = []
+    rolling_hash = RollingHash(text, len(word))
+    word_hash = RollingHash(word, len(word))
+
+    for i in range(len(text) - len(word) + 1):
+        if rolling_hash.hash == word_hash.hash:
+            if rolling_hash.window_text() == word:
+                matches.append(i)
+        rolling_hash.move_window()
+
+    return matches
+
+choice, pattern, text = input().split()
+
+if choice == "I":
+    pass
+elif choice == "F":
+    with open("test.txt", "r") as f:
+        lines = f.readlines()
+        pattern, text = lines[0].strip(), lines[1].strip()
+
+result = rabin_karp(pattern, text)
+
+if result:
+    print(*result)
+else:
+    print("Pattern not found in the text")
 
